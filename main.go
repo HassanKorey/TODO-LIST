@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type Task struct {
@@ -20,17 +22,8 @@ func main() {
 		fmt.Println("please provide a command")
 		return
 	}
-// Here's what the add case needs to do:
-
-// Load existing tasks from file
-// Create a new Task with the title from args[2]
-// Give it an ID (just len(tasks) + 1 is fine)
-// Append it to the slice
-// Save the updated slice back to file
-// Print confirmation
-// Your task — replace the add case with this logic. Try writing it yourself first without me 
-// giving you the code.You have all the tools: loadTask(), saveTask(), append(), and the Task struct.
-	switch args[1] {
+	action := strings.ToLower(args[1])
+	switch action {
 	case "add":
 		if len(args) <= 2 {
 			fmt.Println("incorrect argument length")
@@ -38,15 +31,43 @@ func main() {
 		}
 		title := args[2]
 		loadedTask := loadTask()
-			res := Task{ID: len(loadedTask)+1,Title: title, Done: true}
-			loadedTask =  append(loadedTask, res)
-			saveTask(loadedTask)
-			fmt.Println(loadedTask)
-		
+		res := Task{ID: len(loadedTask) + 1, Title: title}
+		loadedTask = append(loadedTask, res)
+		saveTask(loadedTask)
 		fmt.Println("Done adding task :)")
+
 	case "list":
-		fmt.Println("listing...")
+		loadedTask := loadTask()
+
+		if len(loadedTask) == 0 {
+			fmt.Println("no tasks found")
+			return
+		}
+
+		for _, task := range loadedTask {
+			if task.Done == false {
+				fmt.Printf("%d. [ ] %s\n", task.ID, task.Title)
+			} else {
+				fmt.Printf("%d. [x] %s\n", task.ID, task.Title)
+			}
+		}
+		// Load tasks
+		// Get the ID from args[2] — this will be a string like "1", you need to convert it to an int
+		// Loop through tasks, find the one whose ID matches, set Done = true
+		// Save and print confirmation
 	case "done":
+		loadedTask := loadTask()
+		if len(args) <= 2 {
+			fmt.Println("No task targeted")
+			return
+		}
+		taskNum, _ := strconv.Atoi(args[2])
+		for i, task := range loadedTask {
+			if task.ID == taskNum {
+				loadedTask[i].Done = true
+			}
+		}
+		saveTask(loadedTask)
 		fmt.Println("marking as done...")
 	case "delete":
 		fmt.Println("deleting...")
@@ -70,7 +91,7 @@ func loadTask() []Task {
 
 func saveTask(tasks []Task) {
 
-	savedTask,_ := json.Marshal(tasks)
-	
+	savedTask, _ := json.Marshal(tasks)
+
 	os.WriteFile("tasks.json", savedTask, 0644)
 }
