@@ -70,6 +70,17 @@ func main() {
 		saveTask(loadedTask)
 		fmt.Println("marking as done...")
 	case "delete":
+
+		loadedTask := loadTask()
+		taskNum,_ := strconv.Atoi(args[2])
+
+		for i, task := range loadedTask{
+
+			if task.ID == taskNum{
+				loadedTask = append(loadedTask[:i], loadedTask[i+1:]...)
+			}
+		}
+		saveTask(loadedTask)
 		fmt.Println("deleting...")
 	default:
 		fmt.Println("unknown command")
