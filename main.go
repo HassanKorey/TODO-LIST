@@ -1,14 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 )
-	type Task struct{
-		ID int
-		Title string
-		Done bool
-	}
+
+type Task struct {
+	ID    int
+	Title string
+	Done  bool
+}
 
 func main() {
 
@@ -18,10 +20,10 @@ func main() {
 		fmt.Println("please provide a command")
 		return
 	}
-	
+
 	switch args[1] {
 	case "add":
-		if len(args) <= 2{
+		if len(args) <= 2 {
 			fmt.Println("please provide a task title")
 			return
 		}
@@ -37,13 +39,20 @@ func main() {
 		fmt.Println("unknown command")
 	}
 
-
 }
 
-func loadTask()[]Task{
+func loadTask() []Task {
+	var tasks []Task
+	taskFile, err := os.ReadFile("tasks.json")
 
+	if err != nil {
+		return tasks
+	}
+	json.Unmarshal(taskFile, &tasks)
+
+	return tasks
 }
 
-func saveTask(tasks []Task){
+func saveTask(tasks []Task) {
 
 }
