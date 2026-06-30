@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -19,7 +21,9 @@ func main() {
 	args := os.Args
 
 	if len(args) < 2 {
-		fmt.Println("please provide a command")
+		fmt.Println("Starting server on :8080...")
+		http.HandleFunc("/", listHandler)
+		http.ListenAndServe(":8080", nil)
 		return
 	}
 	action := strings.ToLower(args[1])
@@ -51,10 +55,6 @@ func main() {
 				fmt.Printf("%d. [x] %s\n", task.ID, task.Title)
 			}
 		}
-		// Load tasks
-		// Get the ID from args[2] — this will be a string like "1", you need to convert it to an int
-		// Loop through tasks, find the one whose ID matches, set Done = true
-		// Save and print confirmation
 	case "done":
 		loadedTask := loadTask()
 		if len(args) <= 2 {
@@ -71,13 +71,18 @@ func main() {
 		fmt.Println("marking as done...")
 	case "delete":
 
+		if len(args) <= 2 {
+			fmt.Println("invalid argument, input the correct one")
+			return
+		}
 		loadedTask := loadTask()
-		taskNum,_ := strconv.Atoi(args[2])
+		taskNum, _ := strconv.Atoi(args[2])
 
-		for i, task := range loadedTask{
+		for i, task := range loadedTask {
 
-			if task.ID == taskNum{
+			if task.ID == taskNum {
 				loadedTask = append(loadedTask[:i], loadedTask[i+1:]...)
+				break
 			}
 		}
 		saveTask(loadedTask)
@@ -86,6 +91,21 @@ func main() {
 		fmt.Println("unknown command")
 	}
 
+}
+func listHandler(w http.ResponseWriter, r *http.Request) {
+
+	tasks := loadTask()
+	tmpl := `
+		
+			<h1>My Todo List</h1>
+	<ul>
+	{{range .}}
+		<li>{{.Title}} - {{if .Done}}Done{{else}}Pending{{end}}</li>
+	{{end}}
+	</ul>
+		`
+	parsed := template.Must(template.New("list").Parse(tmpl))
+	parsed.Execute(w, tasks)
 }
 
 func loadTask() []Task {
